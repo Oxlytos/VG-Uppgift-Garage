@@ -14,11 +14,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\oxlyt\\Desktop\\ParkingVGOscar\\ParkingGarage\\ParkingGarage.csproj",
+      "projectUniqueName": "C:\\Users\\oxlyt\\Desktop\\ParkingVGOscar\\VG-Uppgift\\ParkingGarage\\ParkingGarage.csproj",
       "projectName": "ParkingGarage",
-      "projectPath": "C:\\Users\\oxlyt\\Desktop\\ParkingVGOscar\\ParkingGarage\\ParkingGarage.csproj",
+      "projectPath": "C:\\Users\\oxlyt\\Desktop\\ParkingVGOscar\\VG-Uppgift\\ParkingGarage\\ParkingGarage.csproj",
       "packagesPath": "C:\\Users\\oxlyt\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\oxlyt\\Desktop\\ParkingVGOscar\\ParkingGarage\\obj\\",
+      "outputPath": "C:\\Users\\oxlyt\\Desktop\\ParkingVGOscar\\VG-Uppgift\\ParkingGarage\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

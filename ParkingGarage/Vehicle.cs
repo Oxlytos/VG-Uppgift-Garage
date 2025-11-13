@@ -16,6 +16,10 @@ namespace ParkingGarage
 
         public int RequiredSpace {  get; set; }
 
+        internal string Sprite = "";
+
+        public DateTime Parked;
+
 
         internal IVehicle(string color)
         {
@@ -36,6 +40,7 @@ namespace ParkingGarage
         {
             this.RequiredSpace = 2;
             this.Electric = _electric;
+            this.Sprite = "🚗";
         }
 
         public override void GetParkingSpaceRequirment()
@@ -46,7 +51,7 @@ namespace ParkingGarage
         public override string GetRenterInfo() 
         {
             string yesNoElectric = this.Electric ? "Yes" : "No";
-            return $"{this.GetType().Name} REG: {this.RegNr} | Color: {this.VehicleColor} | Electric?: {yesNoElectric}";
+            return $"{this.GetType().Name} {this.Sprite} REG: {this.RegNr} | Color: {this.VehicleColor} | Electric?: {yesNoElectric}";
         }
     }
     public class Motorcycle : IVehicle
@@ -56,7 +61,8 @@ namespace ParkingGarage
         {
             this.BikeMake = _bikeMake;
             this.RequiredSpace = 1;
-        
+            this.Sprite = "🏍️";
+
         }
         public override void GetParkingSpaceRequirment()
         {
@@ -65,7 +71,7 @@ namespace ParkingGarage
 
         public override string GetRenterInfo()
         {
-            return $"{this.GetType().Name} REG: {this.RegNr} | Color: {this.VehicleColor} | Make: {this.BikeMake}";
+            return $"{this.GetType().Name} {this.Sprite} REG: {this.RegNr} | Color: {this.VehicleColor} | Make: {this.BikeMake}";
         }
     }
 
@@ -76,6 +82,7 @@ namespace ParkingGarage
         {
             this.MaxPassagerCount = _maxPassagerCount;
             this.RequiredSpace = 4;
+            this.Sprite = "🚌";
         }
         public override void GetParkingSpaceRequirment()
         {
@@ -84,7 +91,7 @@ namespace ParkingGarage
 
         public override string GetRenterInfo()
         {
-            return $"{this.GetType().Name} REG: {this.RegNr} | Color: {this.VehicleColor} | Max Capacity: {this.MaxPassagerCount}";
+            return $"{this.GetType().Name} {this.Sprite} REG: {this.RegNr} | Color: {this.VehicleColor} | Max Capacity: {this.MaxPassagerCount}";
         }
     }
 }

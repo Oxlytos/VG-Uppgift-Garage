@@ -14,19 +14,19 @@ namespace ParkingGarage
         //Check automatically if its occupado
         public bool Occupied ()=> CheckIfOccupied ();
 
-        //Keep track of the vehicle and the time occupied
-        //Vehicle and Time basically
+        //Keep track of the vehicle and space
+        //Vehicle and Space basically
         public Dictionary<IVehicle, int> OccupyingVehicles { get; set; } = new();
 
         //Return available space directly
-        public int RemainingSpace => CheckSpaceLeft();
+        public int RemainingSpace => Size - OccupyingVehicles.Values.Sum();
 
         //Thing to print in the console
         public string RenterInfo {get; set;}
         public ParkingSpace()
         {
             Size = 2;
-            RenterInfo = "Empty";
+            RenterInfo = "Available";
         }
 
         public void AssignSpace(IVehicle parkingVehicle)
@@ -34,24 +34,83 @@ namespace ParkingGarage
             //If there's space left that fits the boundaries of the vehicle
             if (RemainingSpace >= parkingVehicle.RequiredSpace) 
             {
-                OccupyingVehicles[parkingVehicle] = parkingVehicle.RequiredSpace;
+              //  OccupyingVehicles[parkingVehicle] = parkingVehicle.RequiredSpace;
                 string renterInfoString = parkingVehicle.GetRenterInfo();
+                if (OccupyingVehicles.Count == 0)
+                {
+                    RenterInfo = "\n"+renterInfoString;
+                }
+                else
+                {
+                    RenterInfo += "\n" + renterInfoString;
+                }
+                parkingVehicle.Parked = DateTime.Now;
+                OccupyingVehicles[parkingVehicle] = parkingVehicle.RequiredSpace;
+            }
+            else if (parkingVehicle.GetType().Name == "Bus")
+            {
+                if(RemainingSpace >= 2)
+                {
+                    string renterInfoString = parkingVehicle.GetRenterInfo();
+                    if (OccupyingVehicles.Count == 0)
+                    {
+                        RenterInfo = "\n"+renterInfoString;
+                    }
+                    parkingVehicle.Parked = DateTime.Now;
+                    OccupyingVehicles[parkingVehicle] = parkingVehicle.RequiredSpace;
+                }
+            }
+            
+        }
+
+        public bool VehicleExuent(string reg)
+        {
+            //All vehicles to be removed on this spot (should always be 1, could be 2?)
+
+            var vehiclesToRemove = OccupyingVehicles.Keys
+               .Where(v => v.RegNr.Equals(reg, StringComparison.OrdinalIgnoreCase))
+               .ToList();
+
+            if (vehiclesToRemove != null) 
+            {
+                //Make relevant vehicles leave
+                foreach (var vehicle in vehiclesToRemove)
+                {
+                    Garage.MoreEarnings(vehicle.Parked);
+                    OccupyingVehicles.Remove(vehicle);
+                }
+
+                //If there's one left i.e. a MC
+                if (OccupyingVehicles.Count > 0)
+                {
+                    string renterInfo = "";
+                    foreach (var remVec in OccupyingVehicles.Keys)
+                    {
+                        renterInfo += remVec.GetRenterInfo();
+                    }
+
+                    //Resets the string nice and tidy
+                    RenterInfo = renterInfo.TrimEnd();
+                }
+                else
+                {
+                    RenterInfo = "Available";
+                }
+                return true;
             }
             else
             {
+                return false;
             }
+
         }
 
 
         public bool CheckIfOccupied()
         {
-            return OccupyingVehicles.Values.Sum()>=Size;
+            return OccupyingVehicles.Count > 0;
         }
 
-        public int CheckSpaceLeft()
-        {
-            return Size - OccupyingVehicles.Values.Sum();
-            return Size;
-        }
+        
     }
 }

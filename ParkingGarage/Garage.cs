@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,10 +13,13 @@ namespace ParkingGarage
         static List<IVehicle> vehicles = new List<IVehicle>();
         static List<ParkingSpace> parkingSpaces = new List<ParkingSpace>();
 
-        static Random rand  = new Random();
+        //Total earned
+        static internal decimal totalEarnings = 0;
+
+        //Pricer per s => per m 1.5kr
+        static internal decimal pricePerS = 0.025m;
         public static void Run()
         {
-
             SetupValues();
             ParkingHouse();
         }
@@ -26,36 +30,57 @@ namespace ParkingGarage
             {
                 parkingSpaces.Add(new ParkingSpace());
             }
-
-            for (int i = 0; i < 5; i++)
+            //Create x amount
+            for (int i = 0; i < 30; i++)
             {
-                Car c = new Car(Helpers.RandomColor(), true);
+                Motorcycle c = new Motorcycle(Helpers.RandomColor(), "Yamaha");
                 c.RegNr = Helpers.RandomReg();
                 vehicles.Add(c);
-                SetSpaceForVehicle(parkingSpaces[rand.Next(0,parkingSpaces.Count)], c);
-                //parkingSpaces[rand.Next(0, parkingSpaces.Count)].Renter = $"{c.GetType().Name} {c.RegNr.ToString()} {c.Color}";
             }
+            ParkInitalVehicles();
         }
 
-        static void SetSpaceForVehicle(ParkingSpace space, Car vehicle)
+        static void ParkInitalVehicles()
+        {
+            //Handle all the MCs
+            var mcs = vehicles.OfType<Motorcycle>().ToList();
+
+            foreach (Motorcycle mc in mcs)
+            {
+                var possibleSpaceToShare = Helpers.FindViableNeighbouringSpot(parkingSpaces, mc);
+
+                 SetSpaceForVehicle(possibleSpaceToShare[0], mc);
+            }
+           
+        }
+        static internal void MoreEarnings(DateTime parkDate)
+        {
+            TimeSpan timeDifference = DateTime.Now - parkDate;
+            decimal newEarnings = (decimal)timeDifference.TotalSeconds * pricePerS;
+            CalculateEarnings(newEarnings);
+        }
+        static internal void CalculateEarnings(decimal moreMoney)
+        {
+            totalEarnings += moreMoney;
+        }
+
+
+        static void SetSpaceForVehicle(ParkingSpace space, IVehicle vehicle)
         {
             space.AssignSpace(vehicle);
-            //space.Renter = $"{vehicle.GetType().Name} {vehicle.RegNr} {vehicle.VehicleColor} Electric: {(vehicle.Electric ? "Yes" : "No")}";
         }
-        static void SetSpaceForVehicle(ParkingSpace space, Motorcycle vehicle)
+        //The bus needs 2 clear adjecent spaces to park properly
+        static void SetSpaceForVehicle(List<ParkingSpace> spaces, Bus vehicle)
         {
-          //  space.Renter = $"{vehicle.GetType().Name} {vehicle.RegNr} {vehicle.VehicleColor}";
-        }
-        static void SetSpaceForVehicle(ParkingSpace space, Bus vehicle)
-        {
-            
-            //space.Renter = $"{vehicle.GetType().Name} {vehicle.RegNr} {vehicle.VehicleColor}";
+            spaces[0].AssignSpace(vehicle);
+            spaces[1].AssignSpace(vehicle);
         }
         static void ParkingHouse()
         {
             while (true)
             {
                 Console.WriteLine("🚗🚗🏢OSCARS AFFORDABLE PARKING GARAGE🏢🚗🚗\n");
+                Console.WriteLine($"Earnings: {totalEarnings} Price per/s: {pricePerS}, per/m {pricePerS * 60}");
                 Console.WriteLine("\"Welcome!\"");
                 Console.WriteLine("-Options-");
                 Console.WriteLine("1.👉 Check for new arrivals");
@@ -63,10 +88,11 @@ namespace ParkingGarage
                 Console.WriteLine("3.👉 Revenue");
                 Console.WriteLine("4.👉 Quit");
 
+
                 string userInput = Console.ReadLine();
-                if(Int32.TryParse(userInput, out int input))
+                if (Int32.TryParse(userInput, out int input))
                 {
-                    switch (input) 
+                    switch (input)
                     {
                         case 1:
                             Console.WriteLine("A new vehicle approaches...");
@@ -74,9 +100,11 @@ namespace ParkingGarage
                             break;
                         case 2:
                             Console.WriteLine("Current spaces and renters");
-                            HandleSpaces();
+                            ParkingSpacesList();
                             break;
                         case 3:
+                            //Ta startid
+                            //Jämför med slut tid för parkering
                             Console.WriteLine("Earnings (h)...");
                             break;
                         case 4:
@@ -90,9 +118,6 @@ namespace ParkingGarage
                     Thread.Sleep(1000);
                 }
                 Console.Clear();
-
-
-
             }
         }
 
@@ -102,75 +127,206 @@ namespace ParkingGarage
             Console.WriteLine("1. Car\n2. Motorcycle\n3. Bussd");
 
             string input = Console.ReadLine();
-            if (Int32.TryParse(input, out int choice))
+            if (!Int32.TryParse(input, out int choice))
             {
+                Console.WriteLine("Invalid input!");
+                return;
+            }
+            IVehicle vec = null;
 
-                switch (choice)
+            switch (choice)
+            {
+                //Car
+                case 1:
+                    if (!Helpers.CheckIfWeCanFitCar(parkingSpaces))
+                    {
+                        Helpers.InformUserOfParkingError();
+                        return;
+                    }
+                    vec = CreateCar();
+                    break;
+                //MC
+                case 2:
+                    if (!Helpers.CheckIfWeCanFitMC(parkingSpaces))
+                    {
+                        Helpers.InformUserOfParkingError();
+                        return;
+                    }
+                    vec = CreateMotorcycle();
+                     break;
+                //Bus
+                case 3:
+                    if(!Helpers.CheckIfBusCanFit(parkingSpaces))
+                    {
+                        Helpers.InformUserOfParkingError();
+                        return;
+                    }
+                    vec = CreateBus();
+                        
+                    break;
+                default:
+                    Console.WriteLine("Error, invalid choice");
+                    break;
+            }
+
+            Console.ReadLine();
+        }
+
+        static Car CreateCar()
+        {
+            string color = Helpers.AskColour();
+            Console.Write("Electric? Y/N");
+            bool electricYesOrNo = false;
+            ConsoleKeyInfo key = Console.ReadKey(true);
+            Console.WriteLine();
+            if (key.Key == ConsoleKey.Y)
+            {
+                electricYesOrNo = true;
+                Console.WriteLine("Electric car, got it");
+            }
+            else if (key.Key == ConsoleKey.N)
+            {
+                electricYesOrNo = false;
+                Console.WriteLine("Good ol' diesel");
+            }
+            else
+            {
+                electricYesOrNo = false;
+                Console.WriteLine("Defaulting to diesel");
+            }
+            Car newCar = new Car(color, electricYesOrNo);
+            List<ParkingSpace> carSpace = Helpers.FindViableNeighbouringSpot(parkingSpaces, newCar);
+
+            SetSpaceForVehicle(carSpace[0], newCar);
+            return newCar;
+
+        }
+
+        static Motorcycle CreateMotorcycle()
+        {
+            string mColor = Helpers.AskColour();
+            Console.WriteLine("What make is this bike?");
+            string make = Console.ReadLine();
+            if (string.IsNullOrEmpty(make))
+            {
+                make = "Undefined";
+            }
+            Motorcycle newBike = new Motorcycle(mColor, make);
+            List<ParkingSpace> spots = Helpers.FindViableNeighbouringSpot(parkingSpaces, newBike);
+
+            SetSpaceForVehicle(spots[0], newBike);
+            return newBike;
+
+        }
+
+       
+        static Bus CreateBus()
+        {
+            string bussColour = Helpers.AskColour();
+            Console.WriteLine("How many people can the buss fit?");
+            string userCapcacityInput = Console.ReadLine();
+            int baseBusCap = 20;
+            if (string.IsNullOrEmpty(userCapcacityInput))
+            {
+                Console.WriteLine("Registrering this at standard capacity of 20 people");
+            }
+            else if (Int32.TryParse(userCapcacityInput, out int busCapacity))
+            {
+                baseBusCap = busCapacity;
+            }
+
+            Bus newBus = new Bus(bussColour, baseBusCap);
+            List<ParkingSpace> busSpots = Helpers.FindViableNeighbouringSpot(parkingSpaces,newBus);
+            SetSpaceForVehicle(busSpots, newBus);
+            return newBus;
+           
+        }
+
+        static void ParkingSpacesList()
+        {
+            while (true)
+            {
+                Console.Clear();
+                int avalaibleSpaces = parkingSpaces.Where(t => !t.Occupied()).Count();
+                Console.WriteLine($"In total we got {parkingSpaces.Count} that can be rented, {avalaibleSpaces} are available");
+                for (int i = 0; i < parkingSpaces.Count; i++)
+                {
+                    parkingSpaces[i].CheckIfOccupied();
+                    string spaceLeftYesNo = parkingSpaces[i].Occupied() ? "Yes" : "No";
+                    Console.WriteLine($"{i + 1} Occupied : {spaceLeftYesNo}  {parkingSpaces[i].RenterInfo}");
+                    for (int j = 0; j < 60; j++)
+                    {
+                        Console.Write("-");
+                    }
+                    Console.WriteLine();
+                }
+
+                Console.WriteLine("====Operations======");
+                Console.WriteLine("1. Checkout a vehicle");
+                Console.WriteLine("2. Return to main menu");
+                string userInput = Console.ReadLine();
+
+
+                if (!Int32.TryParse(userInput, out int userMenuChoice))
+                {
+                    Console.WriteLine("Please input a number");
+                    Console.ReadKey();
+                    continue;
+                }
+                switch (userMenuChoice)
                 {
                     case 1:
-                        Console.WriteLine("Car");
-                        Console.Write("Color?: ");
-                        string color = Console.ReadLine();
-                        if (string.IsNullOrEmpty(color))
+                        Console.WriteLine("Please input the REG of the vehicle you wish to checkout");
+                        string userRegInput = Console.ReadLine();
+                        if (string.IsNullOrEmpty(userRegInput))
                         {
-                            color = Helpers.RandomColor();
-                        }
-
-                        Console.Write("Electric? Y/N");
-                        bool electricYesOrNo = false;
-                        ConsoleKeyInfo key = Console.ReadKey(true); // true hides the key from being printed
-                        Console.WriteLine();
-                        if (key.Key == ConsoleKey.Y)
-                        {
-                            electricYesOrNo = true;
-                            Console.WriteLine("Electric car, got it");
-                        }
-                        else if (key.Key == ConsoleKey.N)
-                        {
-                            electricYesOrNo = false;
-                            Console.WriteLine("Good ol' diesel");
+                            Console.ReadKey();
+                            break;
                         }
                         else
                         {
-                        }
-
-                        Car newCar = new Car(color, electricYesOrNo);
-
-                        for(int i = 0; i<parkingSpaces.Count; i++)
-                        {
-                            if (!parkingSpaces[i].Occupied())
+                            bool succes = CheckoutVehicle(userRegInput.ToUpper());
+                            if (succes)
                             {
-                                SetSpaceForVehicle(parkingSpaces[i], newCar);
-                                break;
+                                Console.WriteLine("Vehicle removed!");
                             }
+                            else
+                            {
+                                Console.WriteLine("Error somewhere, couldn't be removed...");
+                            }
+                            Console.ReadLine();
+                            break;
                         }
-                        break;
-
-
                     case 2:
-                        Console.WriteLine("MC");
-                        break;
-                    case 3:
-                        Console.WriteLine("Buss");
+                        Console.WriteLine("Returning to main menu...");
+                        Console.ReadKey();
+                        return;
+                    default:
+                        Console.WriteLine("Invalid option or operation, please try again");
+                        Console.ReadKey();
                         break;
                 }
+            }
 
-                Console.ReadLine();
-            }
         }
-        static void HandleSpaces()
+        static bool CheckoutVehicle(string reg)
         {
-            int avalaibleSpaces = parkingSpaces.Where(t => !t.Occupied()).Count();
-            Console.WriteLine($"In total we got {parkingSpaces.Count} that can be rented, {avalaibleSpaces} are available");
-            for (int i = 0; i < parkingSpaces.Count; i++)
+            //Find spaces with vehicles with matching plates/REGs
+            var parkingSpacesWithReg = parkingSpaces.Where(s => s.OccupyingVehicles.Keys.Any(v => v.RegNr.Equals(reg))).ToList();
+
+            bool succesBool = false;
+            if (parkingSpacesWithReg.Any())
             {
-                parkingSpaces[i].CheckIfOccupied();
-                string spaceLeftYesNo = parkingSpaces[i].Occupied() ? "Yes" : "No";
-                Console.WriteLine($"{i+1} Occupied : {spaceLeftYesNo} | {parkingSpaces[i].RenterInfo}");
+                foreach (var s in parkingSpacesWithReg)
+                {
+                    //Make em' leave
+                    succesBool = s.VehicleExuent(reg);
+                }
             }
-            Console.ReadLine();
+            return succesBool;
         }
+
     }
-    
+
 
 }
