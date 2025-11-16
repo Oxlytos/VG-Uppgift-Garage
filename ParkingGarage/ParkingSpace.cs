@@ -15,11 +15,12 @@ namespace ParkingGarage
         //Occupation is dependent on if count is > 0
         public bool Occupied ()=> CheckIfOccupied();
 
-        //Keep track of the vehicle and space
-        //Vehicle and Space basically
+        //Vehicles on this spot
+        //Vehicle object as the KEY, then the required space as the VALUE
         public Dictionary<IVehicle, int> OccupyingVehicles { get; set; } = new();
 
-        //Return available space directly
+        //Return available space directly, if 2 MC => RemainingSpace = Size(2) - Vehicles (2) = 0
+        //We can have 1 space left if there's just a MC parked here
         public int RemainingSpace => Size - OccupyingVehicles.Values.Sum();
 
         //Thing to print in the console

@@ -16,9 +16,6 @@ namespace ParkingGarage
 
         public int RequiredSpace {  get; set; }
 
-        
-        public int RequiredConsecutiveSpaces { get; set; }
-
         internal string Sprite = "";
 
         public DateTime Parked;
@@ -43,7 +40,6 @@ namespace ParkingGarage
         {
             this.RequiredSpace = 2;
             this.Electric = _electric;
-            this.RequiredConsecutiveSpaces = 1;
             this.Sprite = "🚗";
         }
 
@@ -65,7 +61,6 @@ namespace ParkingGarage
         {
             this.BikeMake = _bikeMake;
             this.RequiredSpace = 1;
-            this.RequiredConsecutiveSpaces = 1;
             this.Sprite = "🏍️";
 
         }
@@ -87,12 +82,11 @@ namespace ParkingGarage
         {
             this.MaxPassagerCount = _maxPassagerCount;
             this.RequiredSpace = 4;
-            this.RequiredConsecutiveSpaces = 2;
             this.Sprite = "🚌";
         }
         public override void GetParkingSpaceRequirment()
         {
-            Console.WriteLine("A bus needs 2 spaces in a row to be clear of other vehicles to park properly");
+            Console.WriteLine("A bus needs 2 consecutive spaces in a row to be clear of other vehicles to park properly");
         }
 
         public override string GetRenterInfo()

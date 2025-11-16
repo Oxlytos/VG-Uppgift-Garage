@@ -115,11 +115,10 @@ namespace ParkingGarage
 
         }
         //Finding a neighbour to park next to is better than parkin in the middle a obstructing possible busses to park
+        //We do this with chunks, explained in the helper function
         static internal List<ParkingSpace> FindViableNeighbouringSpot(List<ParkingSpace> parkingSpaces, IVehicle vehicle)
         {
-            List<ParkingSpace> bestSpaces = null;
-            int spaceReq = -1;
-            //If its empty, park at earliest position and leave func
+            //If its empty, park at earliest position and leave method
             if (!parkingSpaces.Any(ps => ps.Occupied()))
             {
                 //If its a bus, give it the first 2 spaces
@@ -133,56 +132,107 @@ namespace ParkingGarage
                 }
 
             }
-            //Find a shared space
-            if (vehicle is Motorcycle)
-            {
-                Console.WriteLine("Lets see if this MC can find a shared space");
-                var sharedSpace = parkingSpaces.FirstOrDefault(ps => ps.OccupyingVehicles.Keys.OfType<Motorcycle>().Count() < 2 && ps.RemainingSpace == 1);
+            //Find a reference to all EMPTY chunks
+            //A chunk is the space between occupied spaces
+            //O = Occupied, E = Empty
+            //O {E E} O O O {E} O {E E E E} O {E E}
+            //Every {} is a chunk in this case
+            var chunks = FindEmptyChunks(parkingSpaces);
 
-                if (sharedSpace != null)
+            //Bus park with 2 spaces, find a chunk of 2
+            if(vehicle is Bus)
+            {
+                foreach(var chunk in chunks)
                 {
-                    Console.WriteLine("This MC will be sharing with another MC");
-                    return new List<ParkingSpace> { sharedSpace };
+                    //If there's a chunk with 2 spaces or more
+                    if (chunk.Count >= 2)
+                    {
+                        //Park there
+                        //Take takes the first 2 it an find, like SELECT TOP in SQL
+                        //Literally just the first 2 things
+                        return chunk.Take(2).ToList();
+                    }
                 }
+            }
+            //Car or MC
+            else if(vehicle is Car||vehicle is Motorcycle)
+            {
+                //Find a chunk with just one or more spaces, odrder by count (
+                var smallChunk = chunks.Where(c=>c.Count>=1).OrderBy(c=>c.Count).FirstOrDefault();
+                if(smallChunk != null)
+                {
+                    //Find a share space if its a MC
+                    if(vehicle is Motorcycle)
+                    {
+                        Console.WriteLine("Lets see if this MC can find a shared space");
+                        //Find the first MC to park next to, in occuping keys as a MC and if there's 1 space left
+                        var sharedSpace = parkingSpaces.FirstOrDefault(ps => ps.OccupyingVehicles.Keys.OfType<Motorcycle>().Count() < 2 && ps.RemainingSpace == vehicle.RequiredSpace);
+
+                        if (sharedSpace != null)
+                        {
+                            Console.WriteLine("This MC will be sharing with another MC");
+                            return new List<ParkingSpace> { sharedSpace };
+                        }
+                        else
+                        {
+                            Console.WriteLine("We did not in fact find a shared space");
+                        }
+                    }
+                    //Small chunk should be available always here
+                    return new List<ParkingSpace> { smallChunk[0] };
+                }
+            }
+            return null;
+
+            
+        }
+
+        //Nested List
+        //O = Occupied, E = Empty
+        //In total it might be O E O E E O E O E E O O
+        //That would be 4 chunks of empty parkable areas
+        //The list are Like: {E}, {E, E}, {E}, {E, E}
+        internal static List<List<ParkingSpace>> FindEmptyChunks(List<ParkingSpace> spaces)
+        {
+            //Big important list of UnOccopiedSpaces
+            List<List<ParkingSpace>> chunks = new List<List<ParkingSpace>>();
+
+            //Outer list with the current chunk, temp variaböe
+            List<ParkingSpace> currentChunk = new List<ParkingSpace>();
+
+
+            //Loop through
+            foreach (var space in spaces)
+            {
+                //If empty => Its a new empty chunk
+                if (!space.Occupied())
+                {
+                    //Add this chunk
+                    currentChunk.Add(space);
+                }
+                //Occupied space
                 else
-                {
-                    Console.WriteLine("We did not in fact find a shared space");
+                {   
+                    //End a chunk, if this CurrentChunk already has some stuff in it
+                    if(currentChunk.Count > 0)
+                    {
+                        //Add this new completed chunk of empty spaces, that we can use later
+                        chunks.Add(new List<ParkingSpace>(currentChunk));
+
+                        //Clear the list of current spaces in this temp chunk handler
+                        //We keep track of unoccioied spaces, add it to the list list chunk, then clear this list for keeping track of new chunks
+                        currentChunk.Clear();
+                    }
                 }
             }
-            //Just give the bus any 2 spots
-            if (vehicle is Bus)
+            //Make sure to add this last chunk if the last parking space didn't have a occupying vehicle
+            if (currentChunk.Count > 0)
             {
-                for (int i = 0; i < parkingSpaces.Count - 1; i++)
-                {
-                    if (!parkingSpaces[i].Occupied() && !parkingSpaces[i + 1].Occupied())
-                        return new List<ParkingSpace> { parkingSpaces[i], parkingSpaces[i + 1] };
-                }
+                chunks.Add(new List<ParkingSpace>(currentChunk));
             }
 
-            //Count up through the list
-            for (int s = 0; s < parkingSpaces.Count; s++)
-            {
-                if (!parkingSpaces[s].Occupied())
-                {
-                    continue;
-                }
-                //Left
-                if(s - 1 >= 0 && !parkingSpaces[s - 1].Occupied() && parkingSpaces[s - 1].RemainingSpace >= vehicle.RequiredSpace)
-                {
-                    return new List<ParkingSpace> { parkingSpaces[s - 1] };
-                }
 
-                //Right
-                if (s + 1 < parkingSpaces.Count && !parkingSpaces[s + 1].Occupied() && parkingSpaces[s + 1].RemainingSpace >= vehicle.RequiredSpace)
-                {
-                    return new List<ParkingSpace> { parkingSpaces[s + 1] };
-                }
-                var anySpot = parkingSpaces.FirstOrDefault(ps => !ps.Occupied() && ps.RemainingSpace >= vehicle.RequiredSpace);
-                if (anySpot != null)
-                    return new List<ParkingSpace> { anySpot };
-
-            }
-            return bestSpaces;
+            return chunks;
         }
         internal static void InformUserOfParkingError()
         {

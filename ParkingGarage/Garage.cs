@@ -53,6 +53,7 @@ namespace ParkingGarage
             }
            
         }
+        //We give a date when we leave to calc money earned
         static internal void MoreEarnings(DateTime parkDate)
         {
             TimeSpan timeDifference = DateTime.Now - parkDate;
@@ -85,8 +86,7 @@ namespace ParkingGarage
                 Console.WriteLine("-Options-");
                 Console.WriteLine("1.👉 Check for new arrivals");
                 Console.WriteLine("2.👉 Handle parking spaces and renters");
-                Console.WriteLine("3.👉 Revenue");
-                Console.WriteLine("4.👉 Quit");
+                Console.WriteLine("3.👉 Quit");
 
 
                 string userInput = Console.ReadLine();
@@ -103,11 +103,6 @@ namespace ParkingGarage
                             ParkingSpacesList();
                             break;
                         case 3:
-                            //Ta startid
-                            //Jämför med slut tid för parkering
-                            Console.WriteLine("Earnings (h)...");
-                            break;
-                        case 4:
                             Console.WriteLine("Quitting program");
                             return;
                         default:
@@ -166,7 +161,6 @@ namespace ParkingGarage
                         return;
                     }
                     vec = CreateBus();
-                        
                     break;
                 default:
                     Console.WriteLine("Error, invalid choice");
@@ -179,11 +173,13 @@ namespace ParkingGarage
 
         static Car CreateCar()
         {
+            //Helper question
             string color = Helpers.AskColour();
             Console.Write("Electric? Y/N");
             bool electricYesOrNo = false;
             ConsoleKeyInfo key = Console.ReadKey(true);
             Console.WriteLine();
+            //ask, handle input, default to diesel
             if (key.Key == ConsoleKey.Y)
             {
                 electricYesOrNo = true;
@@ -199,7 +195,10 @@ namespace ParkingGarage
                 electricYesOrNo = false;
                 Console.WriteLine("Defaulting to diesel");
             }
+            //Create this car
             Car newCar = new Car(color, electricYesOrNo);
+
+            //Find space
             List<ParkingSpace> carSpace = Helpers.FindViableNeighbouringSpot(parkingSpaces, newCar);
 
             SetSpaceForVehicle(carSpace[0], newCar);
