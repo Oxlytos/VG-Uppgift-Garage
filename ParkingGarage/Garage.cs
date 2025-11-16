@@ -33,9 +33,9 @@ namespace ParkingGarage
             //Create x amount
             for (int i = 0; i < 30; i++)
             {
-                Motorcycle c = new Motorcycle(Helpers.RandomColor(), "Yamaha");
-                c.RegNr = Helpers.RandomReg();
-                vehicles.Add(c);
+               // Motorcycle c = new Motorcycle(Helpers.RandomColor(), "Yamaha");
+               // c.RegNr = Helpers.RandomReg();
+               // vehicles.Add(c);
             }
             ParkInitalVehicles();
         }
@@ -80,7 +80,7 @@ namespace ParkingGarage
             while (true)
             {
                 Console.WriteLine("🚗🚗🏢OSCARS AFFORDABLE PARKING GARAGE🏢🚗🚗\n");
-                Console.WriteLine($"Earnings: {totalEarnings} Price per/s: {pricePerS}, per/m {pricePerS * 60}");
+                Console.WriteLine($"Earnings (kr): {totalEarnings.ToString("0.####")} Price per/s: {pricePerS}, per/m {pricePerS * 60}");
                 Console.WriteLine("\"Welcome!\"");
                 Console.WriteLine("-Options-");
                 Console.WriteLine("1.👉 Check for new arrivals");
@@ -110,12 +110,16 @@ namespace ParkingGarage
                         case 4:
                             Console.WriteLine("Quitting program");
                             return;
+                        default:
+                            Console.WriteLine("Please try again");
+                            Console.ReadLine();
+                            break;
                     }
                 }
                 else
                 {
                     Console.WriteLine("Operation not possible, input misunderstood");
-                    Thread.Sleep(1000);
+                    Console.ReadLine();    
                 }
                 Console.Clear();
             }
@@ -124,7 +128,7 @@ namespace ParkingGarage
         static void NewVehicle()
         {
             Console.WriteLine("The new vehicle is a....");
-            Console.WriteLine("1. Car\n2. Motorcycle\n3. Bussd");
+            Console.WriteLine("1. Car\n2. Motorcycle\n3. Bus");
 
             string input = Console.ReadLine();
             if (!Int32.TryParse(input, out int choice))
@@ -166,6 +170,7 @@ namespace ParkingGarage
                     break;
                 default:
                     Console.WriteLine("Error, invalid choice");
+                    Console.ReadLine();
                     break;
             }
 
@@ -207,6 +212,7 @@ namespace ParkingGarage
             string mColor = Helpers.AskColour();
             Console.WriteLine("What make is this bike?");
             string make = Console.ReadLine();
+            //If empty, just log it as Undefined
             if (string.IsNullOrEmpty(make))
             {
                 make = "Undefined";
@@ -223,20 +229,24 @@ namespace ParkingGarage
         static Bus CreateBus()
         {
             string bussColour = Helpers.AskColour();
-            Console.WriteLine("How many people can the buss fit?");
+            Console.WriteLine("How many people can the bus fit?");
             string userCapcacityInput = Console.ReadLine();
             int baseBusCap = 20;
+            //Some basevalue for a standard capacity bus, lets say we'll default to 20
             if (string.IsNullOrEmpty(userCapcacityInput))
             {
                 Console.WriteLine("Registrering this at standard capacity of 20 people");
             }
+            //If they've inputed an int well register it, else it will be just 20
             else if (Int32.TryParse(userCapcacityInput, out int busCapacity))
             {
                 baseBusCap = busCapacity;
             }
 
+
             Bus newBus = new Bus(bussColour, baseBusCap);
             List<ParkingSpace> busSpots = Helpers.FindViableNeighbouringSpot(parkingSpaces,newBus);
+            //Console.WriteLine("Found this many spots: " +  busSpots.Count);
             SetSpaceForVehicle(busSpots, newBus);
             return newBus;
            
@@ -315,6 +325,9 @@ namespace ParkingGarage
             var parkingSpacesWithReg = parkingSpaces.Where(s => s.OccupyingVehicles.Keys.Any(v => v.RegNr.Equals(reg))).ToList();
 
             bool succesBool = false;
+
+            //If we find a vehicle/s with this REG
+            //I E make sure a bus that occupies 2 spots gets removed
             if (parkingSpacesWithReg.Any())
             {
                 foreach (var s in parkingSpacesWithReg)

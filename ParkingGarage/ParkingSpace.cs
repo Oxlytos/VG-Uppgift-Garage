@@ -9,10 +9,11 @@ namespace ParkingGarage
 {
     internal class ParkingSpace
     {
+        //A parking space has a size of 2
         private int Size {get; set;}
         
-        //Check automatically if its occupado
-        public bool Occupied ()=> CheckIfOccupied ();
+        //Occupation is dependent on if count is > 0
+        public bool Occupied ()=> CheckIfOccupied();
 
         //Keep track of the vehicle and space
         //Vehicle and Space basically
@@ -47,7 +48,8 @@ namespace ParkingGarage
                 parkingVehicle.Parked = DateTime.Now;
                 OccupyingVehicles[parkingVehicle] = parkingVehicle.RequiredSpace;
             }
-            else if (parkingVehicle.GetType().Name == "Bus")
+            // if its a bus
+            else if (parkingVehicle is Bus)
             {
                 if(RemainingSpace >= 2)
                 {
@@ -65,8 +67,7 @@ namespace ParkingGarage
 
         public bool VehicleExuent(string reg)
         {
-            //All vehicles to be removed on this spot (should always be 1, could be 2?)
-
+            //All vehicles to be removed on this spot
             var vehiclesToRemove = OccupyingVehicles.Keys
                .Where(v => v.RegNr.Equals(reg, StringComparison.OrdinalIgnoreCase))
                .ToList();
@@ -83,6 +84,7 @@ namespace ParkingGarage
                 //If there's one left i.e. a MC
                 if (OccupyingVehicles.Count > 0)
                 {
+                    //Reset string
                     string renterInfo = "";
                     foreach (var remVec in OccupyingVehicles.Keys)
                     {
@@ -94,12 +96,14 @@ namespace ParkingGarage
                 }
                 else
                 {
+                    //If its empty, its available
                     RenterInfo = "Available";
                 }
                 return true;
             }
             else
             {
+
                 return false;
             }
 
