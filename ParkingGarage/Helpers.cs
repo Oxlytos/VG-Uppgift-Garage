@@ -192,6 +192,9 @@ namespace ParkingGarage
         //In total it might be O E O E E O E O E E O O
         //That would be 4 chunks of empty parkable areas
         //The list are Like: {E}, {E, E}, {E}, {E, E}
+        //Like a jagged array, but lists, read more at;
+        //https://www.dotnetperls.com/nested-list
+        //https://stackoverflow.com/questions/23015171/how-to-get-display-item-from-nested-listlistint-in-c-sharp
         internal static List<List<ParkingSpace>> FindEmptyChunks(List<ParkingSpace> spaces)
         {
             //Big important list of UnOccopiedSpaces
