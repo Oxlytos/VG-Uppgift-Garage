@@ -211,17 +211,22 @@ namespace ParkingGarage
                 if (!space.Occupied())
                 {
                     //Add this chunk
+                   // Console.WriteLine("Adding this space to current chunk");
                     currentChunk.Add(space);
+                    //Console.WriteLine("Current chunk is at: " + currentChunk.Count);
                 }
                 //Occupied space
                 else
-                {   
+                {
+                  //  Console.WriteLine("Found a occupied spot, ending this chunk");
                     //End a chunk, if this CurrentChunk already has some stuff in it
                     if(currentChunk.Count > 0)
                     {
+                        //Console.WriteLine("Total chunks before adding newest one: " +  chunks.Count);
                         //Add this new completed chunk of empty spaces, that we can use later
                         chunks.Add(new List<ParkingSpace>(currentChunk));
 
+                        //Console.WriteLine("Chunks after adding latest one: " + chunks.Count);
                         //Clear the list of current spaces in this temp chunk handler
                         //We keep track of unoccioied spaces, add it to the list list chunk, then clear this list for keeping track of new chunks
                         currentChunk.Clear();
@@ -231,10 +236,22 @@ namespace ParkingGarage
             //Make sure to add this last chunk if the last parking space didn't have a occupying vehicle
             if (currentChunk.Count > 0)
             {
+               // Console.WriteLine("We got one last chunk with a size of: " + currentChunk.Count);
+              //  Console.WriteLine("Adding last chunk to chunks, chunks at: " + chunks.Count);
                 chunks.Add(new List<ParkingSpace>(currentChunk));
+              
             }
 
+          /*  Console.WriteLine("Last count of chunks: " + chunks.Count);
+            Console.WriteLine("The chunks look like this;\n");
+            
+            for(int i = 0; i<chunks.Count; i++)
+            {
+                Console.WriteLine($"Chunk {i} size is {chunks[i].Count} aka that many spaces");
+            }
 
+            //Example access to first spot in first chunk
+           // Console.WriteLine(chunks[0][0].RemainingSpace.ToString());*/
             return chunks;
         }
         internal static void InformUserOfParkingError()
@@ -254,7 +271,7 @@ namespace ParkingGarage
             return colour;
         }
 
-
+        /*
         static List<ParkingSpace> FindBussSpot(List<ParkingSpace> parkingSpaces)
         {
             List<ParkingSpace> bussSpots = new List<ParkingSpace>();
@@ -282,7 +299,7 @@ namespace ParkingGarage
             {
                 return null;
             }
-        }
+        }*/
 
     }
 

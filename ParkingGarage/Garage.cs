@@ -57,7 +57,9 @@ namespace ParkingGarage
         static internal void MoreEarnings(DateTime parkDate)
         {
             TimeSpan timeDifference = DateTime.Now - parkDate;
+            Console.WriteLine("Time differnce is: " + timeDifference);
             decimal newEarnings = (decimal)timeDifference.TotalSeconds * pricePerS;
+            Console.WriteLine("Earned: " + newEarnings);
             CalculateEarnings(newEarnings);
         }
         static internal void CalculateEarnings(decimal moreMoney)
@@ -81,7 +83,7 @@ namespace ParkingGarage
             while (true)
             {
                 Console.WriteLine("🚗🚗🏢OSCARS AFFORDABLE PARKING GARAGE🏢🚗🚗\n");
-                Console.WriteLine($"Earnings (kr): {totalEarnings.ToString("0.####")} Price per/s: {pricePerS}, per/m {pricePerS * 60}");
+                Console.WriteLine($"Earnings (kr): {totalEarnings.ToString("0.####")} Price per/s: {pricePerS}, per/m {(pricePerS * 60).ToString("0.##")}");
                 Console.WriteLine("\"Welcome!\"");
                 Console.WriteLine("-Options-");
                 Console.WriteLine("1.👉 Check for new arrivals");
